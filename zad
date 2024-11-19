@@ -1,0 +1,250 @@
+import random
+import unittest
+import sys
+
+class Test(unittest.TestCase):
+
+    def setUp(self):
+        self.old_stdout = sys.stdout
+        sys.stdout = open('temp_stdout.txt', 'w')
+
+    def tearDown(self):
+        sys.stdout.close()
+        sys.stdout = self.old_stdout 
+
+    def test_pawn(self):
+        a = int(pawn())
+        b = int(pawn())
+        self.assertIsNot(a, b)
+
+    def test_queen(self):
+        self.assertIsNotNone(queen(k))
+
+    def test_death_zone(self):
+        self.assertIsNotNone(death_zone())
+
+    def test_is_dead(self):
+        check = 0
+        for row in board:
+            for cell in row:
+                if cell == 'O':
+                    check +=1
+        deaths = is_dead()
+        self.assertEqual(check, deaths)
+    
+    def test_clear(self):
+        check = None
+        clear()
+        for row in board:
+            for cell in row:
+                if cell == 'x' or cell == 'O':
+                    check = 1
+        self.assertIsNone(check)
+
+    def test_delete(self):
+        arr = queen(k)
+        row = arr[1] // 10
+        col = arr[1] % 10
+        self.assertTrue(delete(row, col))
+
+    def test_board(self):
+        for row_idx, row in enumerate(board):
+            for col_idx, cell in enumerate(row):
+                board[row_idx][col_idx] = '_'
+
+        board[4][4] = 'P'
+
+        board[3][4] = 'Q'
+        board[1][7] = 'Q'
+        board[2][5] = 'Q'
+        board[3][7] = 'Q'
+        board[1][5] = 'Q'
+
+        death_zone()
+
+        self.assertEqual(is_dead(), 2)
+
+
+
+def pawn():
+    x = 0
+    y = 0
+    for row_idx, row in enumerate(board):
+        for col_idx, cell in enumerate(row):
+            if cell == 'P':
+                board[row_idx][col_idx] = '_'
+                x = row_idx
+                y = col_idx
+    for i in range(1):
+        row = random.randint(0, 7)
+        col = random.randint(0, 7)
+        while board[row][col] != '_' or row == x or col == y:
+            row = random.randint(0, 7)
+            col = random.randint(0, 7)
+        board[row][col] = 'P'
+        return str(row)+str(col)
+        
+
+
+def queen(k):
+    table = []
+    for i in range(k):
+        row = random.randint(0, 7)
+        col = random.randint(0, 7)
+        while board[row][col] != '_':
+            row = random.randint(0, 7)
+            col = random.randint(0, 7)
+        board[row][col] = 'Q'
+        table.append(int(str(row+1)+str(col+1)))
+    return table
+
+def showcase():
+    for row in board:
+        print(' '.join(row))
+
+def death_zone():
+    for row_idx, row in enumerate(board):
+        for col_idx, cell in enumerate(row):
+            if cell == 'P':
+#pionowo
+                for c in range(8):
+                    if board[row_idx][c] == '_':
+                        board[row_idx][c] = 'x'
+                    if board[row_idx][c] == 'Q':
+                        board[row_idx][c] = 'O'
+#poziomowo            
+                for r in range(8):
+                    if board[r][col_idx] == '_':
+                        board[r][col_idx] = 'x'
+                    if board[r][col_idx] == 'Q':
+                        board[r][col_idx] = 'O'
+#pierwszy skos
+                if row_idx > col_idx:
+                    row = row_idx - col_idx
+                    col = 0
+                    while row < 8:
+                        if board[row][col] == '_': 
+                            board[row][col] = 'x'
+                        if board[row][col] == 'Q':
+                            board[row][col] = 'O'
+                        row += 1
+                        col += 1
+
+                if row_idx < col_idx:
+                    row = 0
+                    col = col_idx - row_idx
+                    while col < 8:
+                        if board[row][col] == '_': 
+                            board[row][col] = 'x'
+                        if board[row][col] == 'Q':
+                            board[row][col] = 'O'
+                        row += 1
+                        col += 1
+
+                if row_idx == col_idx:
+                    row = 0
+                    col = 0
+                    while col < 8:
+                        if board[row][col] == '_':
+                            board[row][col] = 'x'
+                        if board[row][col] == 'Q':
+                            board[row][col] = 'O'
+                        row += 1
+                        col += 1
+#drugi skos          
+                sum_idx = row_idx + col_idx
+                for row_xdi, row in enumerate(board):
+                    for col_xdi, col in enumerate(row):
+                        sum = row_xdi + col_xdi
+                        if sum_idx == sum:
+                            if board[row_xdi][col_xdi] == '_':
+                                board[row_xdi][col_xdi] = 'x'
+                            if board[row_xdi][col_xdi] == 'Q':
+                                board[row_xdi][col_xdi] = 'O'
+    print('Strefa smierci pionka:')
+    showcase()
+    is_dead()
+    return board
+
+def is_dead():
+    check = 0
+    for row in board:
+        for val in row:
+            if val == 'O':
+                check += 1
+    if check == 1:
+        print('Pionek zostal zbity przez hetmana oznaczonego jako "O"')
+    if check > 1:
+        print('Pionek zostal zbity przez hetmanow oznaczonych jako "O"')
+    if check == 0:
+        print('Pionek pozostaje w grze')
+    return check
+
+def clear():
+    for row_idx, row in enumerate(board):
+        for col_idx, cell in enumerate(row):
+            if cell == 'x':
+                board[row_idx][col_idx] = '_'
+            if cell == 'O':
+                board[row_idx][col_idx] = 'Q'
+
+def delete(row, col):
+    if k == 1:
+        print('Nie mozna usunac wiecej hetmanow!')
+        loop()
+        return False
+    if board[row-1][col-1] == '_':
+        print('Na tej pozycji nie ma hetmana. Podaj pozycje ponownie: ')
+        delete()
+        return False
+    else:
+        board[row-1][col-1] = '_'
+        return True
+
+
+def restart():
+    global k
+    k = int(input('Podaj liczbe hetmanow: '))
+    if k > 5 or k < 1:
+        print('Zakres liczby hetmanow to 1-5')
+        restart()
+    global board
+    board = [['_' for i in range(8)] for i in range(8)]
+    pawn()
+    queen(k)
+    print('Wygenerowana plansza:')
+    showcase()
+    death_zone()
+    loop()
+
+def loop():
+    opt = int(input('1. Wylosuj nowa pozycje pionka z pozostawieniem pierwotnego ukladu hetmanow\n2. Usun dowolnego hetmana\n3. Weryfikuj ponownie stan pionka\n4. Restart\n5. Testy\n'))
+    if opt == 1:
+        clear()
+        pawn()
+        print('Wygenerowana plansza:')
+        showcase()
+        loop()
+    elif opt == 2:
+        clear()
+        row = int(input('Podaj rzad: '))
+        col = int(input('Podaj kolumne: '))
+        delete(row, col)
+        print('Wygenerowana plansza:')
+        showcase()
+        loop()
+    elif opt == 3:
+        death_zone()
+        loop()
+    elif opt == 4:
+        restart()
+    elif opt == 5:
+        unittest.main()
+        loop()
+    else:
+        print('BLAD!')
+        loop()
+
+if __name__ == '__main__':
+    restart()
+    loop()
